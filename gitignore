@@ -1,0 +1,15 @@
+node_modules/
+.dev.vars
+.env
+.env.*
+!.env.example
+.wrangler/
+wrangler.deploy.jsonc
+arquivos-privados/
+*.sqlite
+*.sqlite3
+*.db
+*.xlsx
+*.xls
+*.csv
+!modelo-inscricoes.csv
