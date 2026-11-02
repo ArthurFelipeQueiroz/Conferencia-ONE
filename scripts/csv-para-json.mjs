@@ -1,0 +1,9 @@
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';import {basename,join} from 'node:path';
+const file=process.argv[2];if(!file)throw Error('Uso: node scripts/csv-para-json.mjs inscritos.csv');
+const data=readFileSync(file,'utf8').replace(/^\uFEFF/,'');const first=data.split(/\r?\n/)[0];const sep=(first.match(/;/g)||[]).length>=(first.match(/,/g)||[]).length?';':',';
+function parse(s){let rows=[],row=[],cell='',quote=false;for(let i=0;i<s.length;i++){let c=s[i];if(quote){if(c==='"'&&s[i+1]==='"'){cell+='"';i++}else if(c==='"')quote=false;else cell+=c;}else if(c==='"')quote=true;else if(c===sep){row.push(cell);cell=''}else if(c==='\n'){row.push(cell.replace(/\r$/,''));rows.push(row);row=[];cell=''}else cell+=c;}if(quote)throw Error('Aspas não fechadas');if(row.length||cell){row.push(cell);rows.push(row)}return rows;}
+const rows=parse(data).filter(r=>r.some(x=>x.trim()));const titles=rows.shift().map(x=>x.trim().toLowerCase());const val=(r,names)=>{for(let n of names){let i=titles.indexOf(n);if(i>=0)return(r[i]||'').trim()}return''};
+const participants=rows.map((r,i)=>({source_row:i+2,registered_at:'',full_name:val(r,['nome','nome completo']),contact:val(r,['telefone','celular','whatsapp']),age_raw:val(r,['idade']),guardian_name:val(r,['responsavel']),church:val(r,['igreja']),shirt_requested:'nao',shirt_size:'',previous_attendance:'',media_consent:'nao',payment_raw:''}));
+if(!participants.length||participants.length>200)throw Error('Importação aceita entre 1 e 200 pessoas.');
+for(const [i,p] of participants.entries())if(p.full_name.length<3||p.contact.replace(/\D/g,'').length<9)throw Error('Nome ou telefone com DDD inválido na linha '+(i+2));
+mkdirSync('arquivos-privados',{recursive:true});const out=join('arquivos-privados',basename(file).replace(/\.csv$/i,'')+'.json');writeFileSync(out,JSON.stringify({schema_version:1,event_date:'2026-11-07',participants},null,2));console.log('Criado: '+out+' (não enviar ao GitHub)');
