@@ -1,51 +1,51 @@
 # Conferência ONE | Check-in — 07/11/2026
 
-Código adaptado do sistema de check-in ENRAIZADOS, preparado para ser hospedado de maneira **independente** pela equipe da Conferência ONE. O banco de dados e o projeto original permanecem intactos.
+O código e as páginas públicas pertencem ao repositório **ArthurFelipeQueiroz/Conferencia-ONE**. A API e o banco D1 são hospedados na conta Cloudflare do Gustavo.
 
-**Repositório de destino:** https://github.com/ArthurFelipeQueiroz/Conferencia-ONE
+| Parte | Local |
+|---|---|
+| Código e páginas | Este repositório, branch `main`, pasta `docs` |
+| Painel da equipe, após ativar Pages | `https://arthurfelipequeiroz.github.io/Conferencia-ONE/equipe/` |
+| Administração, após ativar Pages | `https://arthurfelipequeiroz.github.io/Conferencia-ONE/admin/` |
+| API | Worker `conferencia-one-checkin`, na Cloudflare do Gustavo |
+| Banco | D1 `conferencia-one-2026`, ID `bb82d5b7-e186-41bc-b13c-3f0ec6e40bae` |
 
-## Funciona com
-- Frontend HTML/CSS/JavaScript; backend TypeScript em Cloudflare Workers; banco Cloudflare D1.
-- Páginas `/checkin` (QR público), `/equipe` (recepção) e `/admin` (administradores).
-- Busca por nome e telefone, confirmação de chegada, liberação manual, relatórios e importação de inscrições.
-- Funcionalidades exclusivas do ENRAIZADOS — premiação, vendas/entregas de camisetas e Evolution API — desativadas para não usar dados ou integrações de outro evento.
+## 1. Arthur: ativar as páginas
 
-## Enviar ao GitHub ArthurFelipeQueiroz/Conferencia-ONE
-O repositório de destino foi encontrado **vazio e público** em 02/11/2026. Baixe esta branch em ZIP, extraia os arquivos e envie o conteúdo da pasta extraída para a raiz do repositório usando **Add file → Upload files**. Não envie o ZIP fechado como arquivo da aplicação e não inclua o diretório `.git` do repositório de origem. 
+Os arquivos já estão prontos na pasta `docs`. Uma pessoa com permissão de administração do repositório deve abrir **Settings → Pages**, selecionar **Deploy from a branch**, escolher a branch **main** e a pasta **/docs**, e salvar.
 
-Alternativamente, após extrair, execute na pasta do código (em uma conta que tenha permissão de escrita):
+O GitHub mostrará o endereço publicado após a implantação. Para o painel usar a base de dados, conclua também a publicação da API abaixo.
 
-```bash
-git init
-git add .
-git commit -m "Check-in Conferencia ONE 2026"
-git branch -M main
-git remote add origin https://github.com/ArthurFelipeQueiroz/Conferencia-ONE.git
-git push -u origin main
-```
+## 2. Gustavo: publicar a API pelo navegador
 
-O repositório público pode conter o **código**, mas nunca dados de participantes, especialmente menores, senhas, planilhas privadas ou backups.
+Após ativar Pages, abra `https://arthurfelipequeiroz.github.io/Conferencia-ONE/instalar-api.html`. O guia contém o código compilado e um gerador privado de token; não é necessário instalar programas.
 
-## Publicar com Cloudflare Workers + D1
-GitHub **não hospeda sozinho** este backend com banco D1. Na conta **Cloudflare da organização**:
+1. Na sua Cloudflare, abra o Worker existente **conferencia-one-checkin**.
+2. Em **Settings → Builds**, desconecte o repositório **ENRAIZADOS** deste Worker. O ENRAIZADOS original usa outro Worker.
+3. No guia, clique em **Copiar código da API**. No Worker, abra **Edit code**, substitua o arquivo principal e clique em **Deploy**.
+4. Confira a vinculação D1: variável **DB**, banco **conferencia-one-2026**. Use o banco já criado, com o ID da tabela acima.
+5. Gere o token no guia. Em **Settings → Variables and Secrets** do Worker, adicione **Secret**, nome **BOOTSTRAP_TOKEN**, valor igual ao token gerado; salve e implante.
+6. Abra o painel da equipe pelo GitHub Pages, informe esse token, escolha usuário com pelo menos 4 caracteres e senha com pelo menos 12 caracteres, e crie o administrador.
+7. Faça login. Depois remova o segredo **BOOTSTRAP_TOKEN** do Worker e confirme a implantação.
 
-1. Instale Node.js 22, execute `npm ci`, `npm run check` e `npm test`.
-2. Faça login: `npx wrangler login`.
-3. Crie D1 exclusivo: `npx wrangler d1 create conferencia-one-2026`.
-4. Atualize `database_id` em `wrangler.jsonc` com o ID retornado pelo comando. Não reutilize o D1 do ENRAIZADOS.
-5. Aplique migrações: `npm run db:remote`.
-6. Configure segredo de bootstrap: `npx wrangler secret put BOOTSTRAP_TOKEN` (valor aleatório >=32 caracteres; guarde fora do GitHub).
-7. Publique: `npm run deploy`.
-8. Acesse `/equipe` na URL `*.workers.dev` retornada, cadastre o primeiro administrador e remova o bootstrap com `npx wrangler secret delete BOOTSTRAP_TOKEN`.
-9. Importe cadastros **exclusivos da Conferência ONE**, crie operadores e teste o fluxo completo em dois celulares antes do dia 7.
+A API direciona os endereços antigos de páginas para o GitHub do Arthur. O CORS permite o frontend `https://arthurfelipequeiroz.github.io`; a autenticação continua exigida nas rotas de equipe. O painel usa a sessão por cabeçalho quando acessado no GitHub, sem depender de cookies de terceiros.
 
-## Importar inscritos de forma privada
-Utilize um CSV privado com colunas `nome;telefone;idade;responsavel;igreja`, como no arquivo `modelo-inscricoes.csv` que contém apenas um exemplo fictício. Gere o JSON local com `node scripts/csv-para-json.mjs caminho/inscritos.csv`; o arquivo gerado fica em `arquivos-privados/`, ignorado pelo Git. Importe via `/admin`, confirmando a prévia. A importação atual suporta até 200 pessoas por arquivo. Não reordene linhas já importadas.
+## 3. Importar inscrições
 
-## Personalização
-- Visual: `public/evento-arte.svg`, `public/index.html`, `public/qr-impressao.html` e `public/styles.css`.
-- Conteúdos e fluxo de interface: `public/app.js`.
-- Data e regras: `src/index.ts`, `scripts/csv-para-json.mjs`.
-- Recursos Cloudflare: `wrangler.jsonc`.
+Importe somente cadastros da Conferência ONE pelo painel administrativo. Dados pessoais, senhas, planilhas privadas e backups não devem ser enviados ao repositório público.
 
-**Antes da operação:** teste cadastro de menores e autorização de responsáveis, login, importação, busca, QR, check-in, relatórios e tratamentos de erros. Esta versão não está publicada no Cloudflare do Arthur e requer homologação em ambiente próprio.
+O formato de importação está no arquivo `modelo-inscricoes.csv`, que contém apenas um exemplo fictício. O conversor `scripts/csv-para-json.mjs` continua disponível para preparar o arquivo privado. Faça a conferência no painel antes de aplicar a importação.
+
+## Desenvolvimento
+
+- Interface editável: `public/`.
+- Frontend publicado: `docs/`, gerado por `npm run build:pages`.
+- API: `src/index.ts`, `src/web-origin.mjs` e `src/reconciliation.mjs`.
+- Configuração D1 e URL pública: `wrangler.jsonc`.
+- Validação: `npm run check`, `npm test` e `npm run test:integration`.
+- Compilação para publicação pelo navegador: `npm run build:pages && npm run build:browser-api`.
+
+Depois de editar a interface ou API, gere novamente os arquivos de `docs/` e confirme os testes antes de publicar. O comando `npm run deploy` também pode ser usado em um ambiente de desenvolvimento autorizado para a conta Cloudflare do Gustavo.
+
+Não reutilize bancos, credenciais ou integrações do ENRAIZADOS. Brindes, camisetas e WhatsApp automático herdados do outro evento permanecem desativados na API desta cópia.
+

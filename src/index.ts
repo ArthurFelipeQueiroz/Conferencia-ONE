@@ -1,13 +1,13 @@
 import type { D1Database, D1PreparedStatement } from "@cloudflare/workers-types";
-type Fetcher = { fetch: (request: Request) => Promise<Response> };
 import QRCode from 'qrcode';
 import { planRoster, snapshotDatabase, loadSnapshot, exportSnapshot, reconciliationStatements } from './reconciliation.mjs';
+import { publicAppBase, mutationOriginAllowed, withFrontend } from './web-origin.mjs';
 
 interface Env {
   DB: D1Database;
-  ASSETS: Fetcher;
   BOOTSTRAP_TOKEN: string;
   RATE_LIMIT_SALT?: string;
+  PUBLIC_APP_URL?: string;
 }
 type Role = 'admin' | 'reception' | 'gifts';
 type Staff = { id: number; username: string; role: Role };
@@ -193,21 +193,13 @@ async function route(request:Request,env:Env):Promise<Response> {
  const url=new URL(request.url), path=url.pathname, method=request.method;
  if(!path.startsWith('/api/')) {
    if(method!=='GET' && method!=='HEAD') return reply({error:'Método não permitido.'},405);
-   const appPage=['/','/checkin','/confirmacao','/equipe','/admin'].includes(path);
-   // Cloudflare canonicalizes /index.html to / with a 307. Fetch / internally instead,
-   // preserving the browser URL (/checkin, /equipe or /admin) for client-side routing.
-   const assetPath=appPage?'/':path;
-   const u=new URL(request.url); u.pathname=assetPath;
-   const result=await env.ASSETS.fetch(new Request(u.toString(),request));
-   const h=new Headers(result.headers); h.set('x-content-type-options','nosniff'); h.set('referrer-policy','no-referrer');
-   h.set('content-security-policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'");
-   if(appPage) h.set('cache-control','no-store');
-   return new Response(result.body,{status:result.status,headers:h});
+   const page=path.replace(/\/+$/,'')||'/';
+   if(!['/','/checkin','/confirmacao','/equipe','/admin','/qr-impressao'].includes(page)) return reply({error:'Rota não encontrada.'},404);
+   const target=publicAppBase(env.PUBLIC_APP_URL)+(page==='/'?'/':page+'/')+url.search;
+   return new Response(null,{status:302,headers:{location:target,'cache-control':'no-store','referrer-policy':'no-referrer'}});
  }
  if(method!=='GET' && method!=='HEAD') {
-   const origin=request.headers.get('origin');
-   if(origin && origin!==url.origin) return fail(403,'Origem inválida.');
-   if((request.headers.get('sec-fetch-site')||'')==='cross-site') return fail(403,'Origem inválida.');
+   if(!mutationOriginAllowed(request,env.PUBLIC_APP_URL)) return fail(403,'Origem inválida.');
  }
  if(path==='/api/health' && method==='GET') {
    // Report whether an authenticated spreadsheet import was applied without
@@ -216,7 +208,7 @@ async function route(request:Request,env:Env):Promise<Response> {
    return reply({status:'ok',event_date:EVENT_DATE,configured:!!env.DB,import_applied:Number(lastImport?.value||0)>0});
  }
  if(path==='/api/public/qr.svg' && method==='GET') {
-   const svg=await QRCode.toString(`${url.origin}/checkin`,{type:'svg',width:320,margin:2,errorCorrectionLevel:'M'});
+   const svg=await QRCode.toString(`${publicAppBase(env.PUBLIC_APP_URL)}/checkin/`,{type:'svg',width:320,margin:2,errorCorrectionLevel:'M'});
    return new Response(svg,{headers:{'content-type':'image/svg+xml','cache-control':'public,max-age=3600','x-content-type-options':'nosniff'}});
  }
  if(path==='/api/setup-status' && method==='GET') {
@@ -592,7 +584,7 @@ async function route(request:Request,env:Env):Promise<Response> {
    requireRole(staff,['admin','reception']);
    const p=await env.DB.prepare('SELECT ticket_token FROM participants WHERE id=? AND active=1').bind(Number(qrMatch[1])).first<{ticket_token:string}>();
    if(!p) return fail(404,'Participante não encontrado.');
-   const svg=await QRCode.toString(`${url.origin}/checkin?t=${p.ticket_token}`,{type:'svg',width:360,margin:2});
+   const svg=await QRCode.toString(`${publicAppBase(env.PUBLIC_APP_URL)}/checkin/?t=${p.ticket_token}`,{type:'svg',width:360,margin:2});
    return new Response(svg,{headers:{'content-type':'image/svg+xml','cache-control':'no-store','x-content-type-options':'nosniff'}});
  }
  if(path==='/api/staff/checkin' && method==='POST') {
@@ -894,6 +886,7 @@ async function route(request:Request,env:Env):Promise<Response> {
 }
 export default {
  async fetch(request:Request,env:Env):Promise<Response> {
+   return withFrontend(request,env.PUBLIC_APP_URL,async()=>{
    try { return await route(request,env); }
    catch(err) {
      if(err instanceof HttpError) return reply({error:err.message},err.status);
@@ -909,6 +902,8 @@ export default {
      console.error('Request failed',err instanceof Error?err.message:'unexpected');
      return reply({error:'Não foi possível concluir a operação. Atualize a tela ou procure o administrador.'},500);
    }
+   });
  }
 };
+
 

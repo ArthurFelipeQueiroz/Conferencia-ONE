@@ -7,17 +7,16 @@
     "nodejs_compat"
   ],
   "workers_dev": true,
-  "assets": {
-    "directory": "./public",
-    "binding": "ASSETS",
-    "run_worker_first": true
+  "vars": {
+    "PUBLIC_APP_URL": "https://arthurfelipequeiroz.github.io/Conferencia-ONE"
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "conferencia-one-2026",
-      "database_id": "991d5c88-ca94-4c91-860a-730c6d169268",
+      "database_id": "bb82d5b7-e186-41bc-b13c-3f0ec6e40bae",
       "migrations_dir": "migrations"
     }
   ]
 }
+
