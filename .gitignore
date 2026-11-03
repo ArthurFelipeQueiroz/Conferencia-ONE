@@ -13,3 +13,9 @@ arquivos-privados/
 *.xls
 *.csv
 !modelo-inscricoes.csv
+
+.env*
+!.env.example
+one-secrets.json
+*Inscritos.sql
+.qa*/

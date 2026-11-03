@@ -1,51 +1,34 @@
-# Conferência ONE | Check-in — 07/11/2026
+# Conferência ONE · 07/11/2026
 
-O código e as páginas públicas pertencem ao repositório **ArthurFelipeQueiroz/Conferencia-ONE**. A API e o banco D1 são hospedados na conta Cloudflare do Gustavo.
+Painel de credenciamento e administração para o ministério de jovens.
 
-| Parte | Local |
-|---|---|
-| Código e páginas | Este repositório, branch `main`, pasta `docs` |
-| Painel da equipe, após ativar Pages | `https://arthurfelipequeiroz.github.io/Conferencia-ONE/equipe/` |
-| Administração, após ativar Pages | `https://arthurfelipequeiroz.github.io/Conferencia-ONE/admin/` |
-| API | Worker `conferencia-one-checkin`, na Cloudflare do Gustavo |
-| Banco | D1 `conferencia-one-2026`, ID `bb82d5b7-e186-41bc-b13c-3f0ec6e40bae` |
+## Estrutura
 
-## 1. Arthur: ativar as páginas
+- Código e painel: ArthurFelipeQueiroz/Conferencia-ONE, GitHub Pages, pasta docs.
+- API: Vercel, projeto conferencia-one-api, Node.js 22.
+- Banco: PostgreSQL 17 no Neon, projeto conferencia-one-2026, banco one, região São Paulo.
+- O VOZ e a Jornada Diaconal pertencem a projetos separados.
 
-Os arquivos já estão prontos na pasta `docs`. Uma pessoa com permissão de administração do repositório deve abrir **Settings → Pages**, selecionar **Deploy from a branch**, escolher a branch **main** e a pasta **/docs**, e salvar.
+## Publicação
 
-O GitHub mostrará o endereço publicado após a implantação. Para o painel usar a base de dados, conclua também a publicação da API abaixo.
+Instalar dependências com npm ci; executar npm run check, npm test e npm run build.
+Configurar DATABASE_URL como segredo de produção na Vercel e PUBLIC_APP_URL como https://arthurfelipequeiroz.github.io/Conferencia-ONE.
+A API está em api/index.ts. O adaptador PostgreSQL usa consultas parametrizadas e transações Serializable com repetição em conflitos de concorrência.
+A estrutura inicial para um banco vazio está em postgres/schema.sql.
+As migrações da pasta migrations são histórico da versão anterior em D1; não devem ser executadas no Neon.
 
-## 2. Gustavo: publicar a API pelo navegador
+## Dados e acesso
 
-Após ativar Pages, abra `https://arthurfelipequeiroz.github.io/Conferencia-ONE/instalar-api.html`. O guia contém o código compilado e um gerador privado de token; não é necessário instalar programas.
+Os inscritos e as credenciais são privados e ficam fora deste repositório. O administrador recebe suas credenciais separadamente. Nenhuma conexão de banco, senha, token de instalação ou lista de participantes deve ser enviada ao GitHub.
+As consultas, check-in, entregas, exportações e funções administrativas exigem uma sessão e o perfil autorizado.
+O navegador se conecta à API e não recebe a credencial do banco.
+A consulta pública exige nome completo e contato, ou um ticket individual. Os dados ausentes na planilha devem ser conferidos pela equipe.
 
-1. Na sua Cloudflare, abra o Worker existente **conferencia-one-checkin**.
-2. Em **Settings → Builds**, desconecte o repositório **ENRAIZADOS** deste Worker. O ENRAIZADOS original usa outro Worker.
-3. No guia, clique em **Copiar código da API**. No Worker, abra **Edit code**, substitua o arquivo principal e clique em **Deploy**.
-4. Confira a vinculação D1: variável **DB**, banco **conferencia-one-2026**. Use o banco já criado, com o ID da tabela acima.
-5. Gere o token no guia. Em **Settings → Variables and Secrets** do Worker, adicione **Secret**, nome **BOOTSTRAP_TOKEN**, valor igual ao token gerado; salve e implante.
-6. Abra o painel da equipe pelo GitHub Pages, informe esse token, escolha usuário com pelo menos 4 caracteres e senha com pelo menos 12 caracteres, e crie o administrador.
-7. Faça login. Depois remova o segredo **BOOTSTRAP_TOKEN** do Worker e confirme a implantação.
+## Validação
 
-A API direciona os endereços antigos de páginas para o GitHub do Arthur. O CORS permite o frontend `https://arthurfelipequeiroz.github.io`; a autenticação continua exigida nas rotas de equipe. O painel usa a sessão por cabeçalho quando acessado no GitHub, sem depender de cookies de terceiros.
+npm test executa verificações de origem, sessão, rotas públicas, geração do GitHub Pages e parametrização de SQL.
+O teste tests/postgres.integration.mjs exige ONE_TEST_SECRETS apontando a um arquivo privado que contenha qa_database_url. A conexão precisa ser diferente da produção. Ele cria apenas cadastros sintéticos em uma branch isolada de testes.
 
-## 3. Importar inscrições
+## Entrega ao Arthur
 
-Importe somente cadastros da Conferência ONE pelo painel administrativo. Dados pessoais, senhas, planilhas privadas e backups não devem ser enviados ao repositório público.
-
-O formato de importação está no arquivo `modelo-inscricoes.csv`, que contém apenas um exemplo fictício. O conversor `scripts/csv-para-json.mjs` continua disponível para preparar o arquivo privado. Faça a conferência no painel antes de aplicar a importação.
-
-## Desenvolvimento
-
-- Interface editável: `public/`.
-- Frontend publicado: `docs/`, gerado por `npm run build:pages`.
-- API: `src/index.ts`, `src/web-origin.mjs` e `src/reconciliation.mjs`.
-- Configuração D1 e URL pública: `wrangler.jsonc`.
-- Validação: `npm run check`, `npm test` e `npm run test:integration`.
-- Compilação para publicação pelo navegador: `npm run build:pages && npm run build:browser-api`.
-
-Depois de editar a interface ou API, gere novamente os arquivos de `docs/` e confirme os testes antes de publicar. O comando `npm run deploy` também pode ser usado em um ambiente de desenvolvimento autorizado para a conta Cloudflare do Gustavo.
-
-Não reutilize bancos, credenciais ou integrações do ENRAIZADOS. Brindes, camisetas e WhatsApp automático herdados do outro evento permanecem desativados na API desta cópia.
-
+O código e o endereço do GitHub já pertencem ao Arthur. O projeto Neon foi criado diretamente no Neon, fora de uma organização gerenciada pela Vercel, para permitir transferência de titularidade. A transferência do banco e a da hospedagem da API são etapas separadas. O projeto Neon possui uma branch de produção main e uma branch de testes one-qa-synthetic.

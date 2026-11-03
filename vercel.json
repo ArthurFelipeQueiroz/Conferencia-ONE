@@ -1,0 +1,10 @@
+{
+  "$schema":"https://openapi.vercel.sh/vercel.json",
+  "framework":null,
+  "buildCommand":"npm run build",
+  "outputDirectory":"docs",
+  "regions":["gru1"],
+  "functions":{"api/index.ts":{"maxDuration":60}},
+  "rewrites":[{"source":"/api/:path*","destination":"/api/index"},{"source":"/Conferencia-ONE/:path*","destination":"/:path*"}],
+  "headers":[{"source":"/api/:path*","headers":[{"key":"Cache-Control","value":"no-store"},{"key":"X-Content-Type-Options","value":"nosniff"}]}]
+}

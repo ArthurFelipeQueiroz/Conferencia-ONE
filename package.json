@@ -1,28 +1,24 @@
 {
-  "name": "checkin-encontro-jovens",
-  "version": "0.1.0",
+  "name": "conferencia-one",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "node scripts/validar-publicacao.mjs && npm run check && npm test && wrangler deploy",
-    "deploy:migrate": "node scripts/validar-publicacao.mjs && npm run check && npm test && npm run db:remote && wrangler deploy",
-    "db:local": "wrangler d1 migrations apply DB --local",
-    "db:remote": "wrangler d1 migrations apply DB --remote",
-    "check": "tsc --noEmit",
-    "test": "node --check public/app.js && node --check public/instalar-api.js && node --check public/qr-print.js && node --check scripts/csv-para-json.mjs && node --check scripts/validar-publicacao.mjs && node --test tests/modelo.test.mjs tests/web-origin.test.mjs tests/pages-build.test.mjs",
+    "build": "node scripts/build-github-pages.mjs",
     "build:pages": "node scripts/build-github-pages.mjs",
-    "test:integration": "wrangler deploy --dry-run --outdir .qa-worker && node --test tests/api-remote-origin.integration.mjs",
-    "build:browser-api": "wrangler deploy --dry-run --outdir .qa-worker && node scripts/build-browser-api.mjs"
+    "check": "tsc --noEmit",
+    "test": "node --check public/app.js && node --test tests/modelo.test.mjs tests/web-origin.test.mjs tests/pages-build.test.mjs tests/postgres.test.mjs tests/one-profiles.test.mjs"
   },
   "dependencies": {
-    "qrcode": "^1.5.4"
+    "@neondatabase/serverless": "1.2.0",
+    "qrcode": "1.5.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "5.20260929.1",
-    "@types/qrcode": "^1.5.5",
-    "typescript": "^5.5.4",
-    "wrangler": "4.144.0",
-    "miniflare": "5.20260926.1-alpha"
+    "@types/node": "22.10.2",
+    "@types/qrcode": "1.5.5",
+    "typescript": "5.9.3"
   }
 }
