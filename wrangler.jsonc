@@ -16,7 +16,7 @@
     {
       "binding": "DB",
       "database_name": "conferencia-one-2026",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "991d5c88-ca94-4c91-860a-730c6d169268",
       "migrations_dir": "migrations"
     }
   ]
