@@ -1,0 +1,22 @@
+CONFERÊNCIA ONE — ARQUIVOS PARA O GITHUB DO ARTHUR
+
+O que publicar: somente a pasta docs deste pacote no repositório ArthurFelipeQueiroz/Conferencia-ONE.
+A API já está na Vercel, e o banco já está no Neon; não devem ser publicados no GitHub.
+
+COM ARTHUR, PASSO A PASSO:
+1. Baixe e extraia este ZIP no seu computador.
+2. Acesse https://github.com/ArthurFelipeQueiroz/Conferencia-ONE e entre com a conta com permissão de escrita.
+3. Abra a raiz do repositório (não entre dentro da pasta docs), clique Add file > Upload files.
+4. ARRASTE A PASTA docs EXTRAÍDA, com todas as subpastas, para a área de upload. Confirme que aparecem caminhos docs/app.js, docs/index.html, docs/equipe/index.html etc.
+5. Clique Commit changes e aguarde o GitHub concluir.
+6. Arthur (administrador do repositório): Settings > Pages > Build and deployment > Deploy from a branch > main > /docs > Save.
+7. Verifique https://arthurfelipequeiroz.github.io/Conferencia-ONE/equipe/ e https://arthurfelipequeiroz.github.io/Conferencia-ONE/admin/.
+
+ANTES DE USAR NO EVENTO:
+- Verifique que o painel usa a API https://conferencia-one-api-gustavomarqueslopes-cmds-projects.vercel.app (e NÃO a antiga Workers/Cloudflare).
+- Teste login, listagem dos 121 inscritos e check-in com registro exclusivamente fictício e restaurável.
+- A planilha original não contém telefones nem idades dos participantes; o lookup por nome + telefone não estará pronto até completar contatos.
+- Atualize 45 tamanhos de camiseta pendentes diretamente no painel, com informação validada.
+
+NÃO ENVIAR: planilha de inscrições, arquivos de senha, dados pessoais, .env, token de acesso, scripts SQL privados ou ZIP do backend.
+Nunca altere VOZ, ENRAIZADOS ou qualquer outro repositório.
